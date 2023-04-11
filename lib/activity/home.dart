@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:kirafan_launcher/components/button.dart';
 import 'package:kirafan_launcher/activity/config.dart';
 
@@ -29,7 +31,25 @@ class HomeActivityState extends State<HomeActivity> {
               }
             ),
             const SizedBox(height: 12),
-            Button(text: "启动", action: () {}),
+            Button(text: "启动", action: () async {
+              const permission = Permission.manageExternalStorage;
+              final status = await permission.status;
+              if (status.isGranted) {
+                const intent = AndroidIntent(
+                  package: "com.aniplex.kirarafantasia",
+                  componentName: "com.google.firebase.MessagingUnityPlayerActivity",
+                  action: "ACTION_MAIN",
+                  category: "CATEGORY_LAUNCHER"
+                );
+                intent.launch();
+              }
+              else if (status.isPermanentlyDenied) {
+                openAppSettings();
+              }
+              else {
+                await permission.request();
+              }
+            }),
             const SizedBox(height: 12),
             Button(text: "设置", action: () {})
           ],
