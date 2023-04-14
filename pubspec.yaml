@@ -33,6 +33,8 @@ dependencies:
   shared_preferences:
   permission_handler:
   android_intent_plus:
+  device_info_plus:
+  fluttertoast:
   appcheck:
   saf:
 
