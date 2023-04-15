@@ -45,14 +45,14 @@ class ConfigActivityState extends State<ConfigActivity> {
             TextField(
               controller: api,
               decoration: const InputDecoration(
-                labelText: '服务器URL'
+                labelText: '服务器主机名'
               )
             ),
             const SizedBox(height: 12),
             TextField(
               controller: asset,
               decoration: const InputDecoration(
-                labelText: '资源库URL'
+                labelText: '资源主机名'
               )
             )
           ],

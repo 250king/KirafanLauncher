@@ -1,11 +1,16 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:need_resume/need_resume.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:installed_apps/installed_apps.dart';
+import 'package:saf/saf.dart';
+import 'package:kirafan_launcher/base/data.dart';
 import 'package:kirafan_launcher/components/button.dart';
 import 'package:kirafan_launcher/activity/config.dart';
+
+final data = Data.preferences;
 
 class HomeActivity extends StatefulWidget {
   const HomeActivity({super.key});
@@ -20,18 +25,32 @@ class HomeActivityState extends ResumableState<HomeActivity> {
   final package = "com.aniplex.kirarafantasia";
 
   final browser = ChromeSafariBrowser();
+  
+  void write(RandomAccessFile file, origin, replace, position) {
+    
+  }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  void checkApp() {
     InstalledApps.getAppInfo(package).then((result) {
       setState(() {
         version = result.versionName ?? "";
       });
-    }).onError((error, stackTrace)  {
+    }).catchError((error) {
       setState(() {
         version =  "";
       });
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    checkApp();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    checkApp();
   }
 
   @override
@@ -46,8 +65,8 @@ class HomeActivityState extends ResumableState<HomeActivity> {
           children: [
             Button(
               text: "配置",
-              action: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
+              action: () async {
+                await Navigator.push(context, MaterialPageRoute(builder: (context) {
                   return const ConfigActivity();
                 }));
               }
@@ -55,9 +74,9 @@ class HomeActivityState extends ResumableState<HomeActivity> {
             const SizedBox(height: 12),
             Button(
               text: version.isEmpty? "安装应用": "应用已安装（v$version）",
-              action: () {
+              action: () async {
                 if (version.isEmpty) {
-                  browser.open(
+                  await browser.open(
                     url: Uri.parse("https://kirafan-asset-cn-shenzhen.oss-cn-shenzhen.aliyuncs.com/apk/%E3%81%8D%E3%82%89%E3%82%89%E3%83%95%E3%82%A1%E3%83%B3%E3%82%BF%E3%82%B8%E3%82%A2_3.6.0_Apkpure.apk")
                   );
                 }
@@ -74,13 +93,18 @@ class HomeActivityState extends ResumableState<HomeActivity> {
                 final device = DeviceInfoPlugin();
                 final os = await device.androidInfo;
                 late PermissionStatus status;
+                late bool saf;
                 if (os.version.sdkInt >= 30) {
                   status = await Permission.manageExternalStorage.request();
+                  if (status.isGranted) {
+                    saf = await Saf("Android/data").getDirectoryPermission() ?? false;
+                  }
                 }
                 else {
+                  saf = true;
                   status = await Permission.storage.request();
                 }
-                if (status == PermissionStatus.granted) {
+                if (status.isGranted && saf) {
                   InstalledApps.startApp(package);
                 }
                 else if (status.isPermanentlyDenied) {
