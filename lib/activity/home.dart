@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:android_intent_plus/android_intent.dart';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:need_resume/need_resume.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:installed_apps/installed_apps.dart';
 import 'package:kirafan_launcher/components/button.dart';
 import 'package:kirafan_launcher/activity/config.dart';
 
@@ -13,7 +14,26 @@ class HomeActivity extends StatefulWidget {
   State<HomeActivity> createState() => HomeActivityState();
 }
 
-class HomeActivityState extends State<HomeActivity> {
+class HomeActivityState extends ResumableState<HomeActivity> {
+  String version = "";
+
+  final package = "com.aniplex.kirarafantasia";
+
+  final browser = ChromeSafariBrowser();
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    InstalledApps.getAppInfo(package).then((result) {
+      setState(() {
+        version = result.versionName ?? "";
+      });
+    }).onError((error, stackTrace)  {
+      setState(() {
+        version =  "";
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,37 +53,49 @@ class HomeActivityState extends State<HomeActivity> {
               }
             ),
             const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () {},
-              child: const Text("应用")
+            Button(
+              text: version.isEmpty? "安装应用": "应用已安装（v$version）",
+              action: () {
+                if (version.isEmpty) {
+                  browser.open(
+                    url: Uri.parse("https://kirafan-asset-cn-shenzhen.oss-cn-shenzhen.aliyuncs.com/apk/%E3%81%8D%E3%82%89%E3%82%89%E3%83%95%E3%82%A1%E3%83%B3%E3%82%BF%E3%82%B8%E3%82%A2_3.6.0_Apkpure.apk")
+                  );
+                }
+              }
             ),
             const SizedBox(height: 12),
             Button(text: "启动", action: () async {
-              final device = DeviceInfoPlugin();
-              final os = await device.androidInfo;
-              late PermissionStatus status;
-              if (os.version.sdkInt >= 30) {
-                status = await Permission.manageExternalStorage.request();
+              if (version.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("您还没安装应用，请先安装应用后再尝试启动")
+                ));
               }
-              else {
-                status = await Permission.storage.request();
-              }
-              if (status == PermissionStatus.granted) {
-                const intent = AndroidIntent(
-                  package: "com.aniplex.kirarafantasia",
-                  componentName: "com.google.firebase.MessagingUnityPlayerActivity",
-                  action: "ACTION_MAIN",
-                  category: "CATEGORY_LAUNCHER"
-                );
-                intent.launch();
-              }
-              else if (status.isPermanentlyDenied) {
-                Fluttertoast.showToast(msg: "由于您永久拒绝授予文件访问权限，需要手动在在在应用设置允许文件访问");
-                openAppSettings();
+              else if (version == "3.6.0") {
+                final device = DeviceInfoPlugin();
+                final os = await device.androidInfo;
+                late PermissionStatus status;
+                if (os.version.sdkInt >= 30) {
+                  status = await Permission.manageExternalStorage.request();
+                }
+                else {
+                  status = await Permission.storage.request();
+                }
+                if (status == PermissionStatus.granted) {
+                  InstalledApps.startApp(package);
+                }
+                else if (status.isPermanentlyDenied) {
+                  InstalledApps.toast("由于您永久拒绝授予文件访问权限，需要手动在在在应用设置允许文件访问", true);
+                  openAppSettings();
+                }
+                else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("很抱歉，我们需要文件访问权限，请再次尝试授权")
+                  ));
+                }
               }
               else {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text("很抱歉，我们需要文件访问权限，请再次尝试授权")
+                  content: Text("很抱歉，目前仅支持版本3.6.0，请删除版本有误的应用后重新安装")
                 ));
               }
             }),

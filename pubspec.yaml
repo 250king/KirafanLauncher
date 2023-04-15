@@ -32,10 +32,10 @@ dependencies:
     sdk: flutter
   shared_preferences:
   permission_handler:
-  android_intent_plus:
+  flutter_inappwebview:
   device_info_plus:
-  fluttertoast:
-  appcheck:
+  installed_apps:
+  need_resume:
   saf:
 
 

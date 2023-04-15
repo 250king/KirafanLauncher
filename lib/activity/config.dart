@@ -16,6 +16,13 @@ class ConfigActivityState extends State<ConfigActivity> {
   final asset = TextEditingController(text: data.getString("asset") ?? "");
 
   @override
+  void dispose() {
+    super.dispose();
+    api.dispose();
+    asset.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
