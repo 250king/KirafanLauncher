@@ -17,6 +17,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.1.1"
+  bringtoforeground:
+    dependency: "direct main"
+    description:
+      name: bringtoforeground
+      sha256: "47e63e4ca8a5dd753efbc168528e63e8d1136337a0532d558701f01e896ed5c9"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.0.2"
   characters:
     dependency: transitive
     description:
@@ -94,14 +102,30 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_inappwebview:
+  flutter_custom_tabs:
     dependency: "direct main"
     description:
-      name: flutter_inappwebview
-      sha256: f73505c792cf083d5566e1a94002311be497d984b5607f25be36d685cf6361cf
+      name: flutter_custom_tabs
+      sha256: bebb9552438eb3aea8f8511d48e41abdd0d05ff3e9a74622a4d1acd2bffd242c
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "5.7.2+3"
+    version: "1.0.4"
+  flutter_custom_tabs_platform_interface:
+    dependency: transitive
+    description:
+      name: flutter_custom_tabs_platform_interface
+      sha256: bbd2d9a2ff22d27e079a35302ddd3da9f2328110c370d56c81655a7ba306fee2
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.1"
+  flutter_custom_tabs_web:
+    dependency: transitive
+    description:
+      name: flutter_custom_tabs_web
+      sha256: d735abff9a1b215018dfe2584f131fe0a3bb0e3b685fbd6ae8a55cf5c4d7dcd8
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.0"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -272,14 +296,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "4.2.4"
-  saf:
-    dependency: "direct main"
-    description:
-      name: saf
-      sha256: "3b7565638bc155801dc2b1b948ee0545f8cf9310da6e0f4ded45f62ee83f1321"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.0.3+4"
   shared_preferences:
     dependency: "direct main"
     description:
@@ -336,6 +352,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.2.0"
+  shared_storage:
+    dependency: "direct main"
+    description:
+      name: shared_storage
+      sha256: d096641945cb2b84df9f74b693712688ab62fb82d08d5d7bde5ef25b72217234
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.7.2"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -389,6 +413,22 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.4.16"
+  url_launcher_platform_interface:
+    dependency: transitive
+    description:
+      name: url_launcher_platform_interface
+      sha256: "6c9ca697a5ae218ce56cece69d46128169a58aa8653c1b01d26fcd4aad8c4370"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.1.2"
+  url_launcher_web:
+    dependency: transitive
+    description:
+      name: url_launcher_web
+      sha256: "81fe91b6c4f84f222d186a9d23c73157dc4c8e1c71489c4d08be1ad3b228f1aa"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.0.16"
   vector_math:
     dependency: transitive
     description:

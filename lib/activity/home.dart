@@ -1,11 +1,13 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:need_resume/need_resume.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:installed_apps/installed_apps.dart';
-import 'package:saf/saf.dart';
+import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
+import 'package:need_resume/need_resume.dart';
+import 'package:shared_storage/saf.dart';
 import 'package:kirafan_launcher/base/data.dart';
 import 'package:kirafan_launcher/components/button.dart';
 import 'package:kirafan_launcher/activity/config.dart';
@@ -15,6 +17,8 @@ final data = Data.preferences;
 class HomeActivity extends StatefulWidget {
   const HomeActivity({super.key});
 
+  final package = "com.aniplex.kirarafantasia";
+
   @override
   State<HomeActivity> createState() => HomeActivityState();
 }
@@ -22,16 +26,20 @@ class HomeActivity extends StatefulWidget {
 class HomeActivityState extends ResumableState<HomeActivity> {
   String version = "";
 
-  final package = "com.aniplex.kirarafantasia";
-
-  final browser = ChromeSafariBrowser();
-  
-  void write(RandomAccessFile file, origin, replace, position) {
-    
+  void write(RandomAccessFile file, String origin, String replace, int position) async {
+    final length = origin.length;
+    file.setPosition(position);
+    final raw = await file.read(length);
+    if (raw != utf8.encode(replace)) {
+      if (raw == utf8.encode(origin)) {
+        file.setPosition(position);
+        file.writeFrom(utf8.encode(replace));
+      }
+    }
   }
 
   void checkApp() {
-    InstalledApps.getAppInfo(package).then((result) {
+    InstalledApps.getAppInfo(widget.package).then((result) {
       setState(() {
         version = result.versionName ?? "";
       });
@@ -49,8 +57,8 @@ class HomeActivityState extends ResumableState<HomeActivity> {
 
   @override
   void initState() {
-    super.initState();
     checkApp();
+    super.initState();
   }
 
   @override
@@ -76,9 +84,10 @@ class HomeActivityState extends ResumableState<HomeActivity> {
               text: version.isEmpty? "安装应用": "应用已安装（v$version）",
               action: () async {
                 if (version.isEmpty) {
-                  await browser.open(
-                    url: Uri.parse("https://kirafan-asset-cn-shenzhen.oss-cn-shenzhen.aliyuncs.com/apk/%E3%81%8D%E3%82%89%E3%82%89%E3%83%95%E3%82%A1%E3%83%B3%E3%82%BF%E3%82%B8%E3%82%A2_3.6.0_Apkpure.apk")
-                  );
+                  const url = "https://kirafan-asset-cn-shenzhen.oss-cn-shenzhen.aliyuncs.com/apk/%E3%81%8D%E3%82%89%E3%82%89%E3%83%95%E3%82%A1%E3%83%B3%E3%82%BF%E3%82%B8%E3%82%A2_3.6.0_Apkpure.apk";
+                  await launch(url, customTabsOption: const CustomTabsOption(
+                    enableDefaultShare: false
+                  ));
                 }
               }
             ),
@@ -93,19 +102,32 @@ class HomeActivityState extends ResumableState<HomeActivity> {
                 final device = DeviceInfoPlugin();
                 final os = await device.androidInfo;
                 late PermissionStatus status;
-                late bool saf;
+                String dir = "";
                 if (os.version.sdkInt >= 30) {
                   status = await Permission.manageExternalStorage.request();
-                  if (status.isGranted) {
-                    saf = await Saf("Android/data").getDirectoryPermission() ?? false;
-                  }
                 }
                 else {
-                  saf = true;
                   status = await Permission.storage.request();
                 }
-                if (status.isGranted && saf) {
-                  InstalledApps.startApp(package);
+                if (status.isGranted && dir.isNotEmpty) {
+                  InstalledApps.startApp(widget.package);
+                  if (os.version.sdkInt >= 30) {
+                    InstalledApps.toast("请等待5秒钟后继续授权，等待期间不要退出游戏", true);
+                    Timer.periodic(const Duration(seconds: 5), (t) async {
+                      final saf = await openDocument(
+                        initialUri: Uri.file("/storage/emulated/0/android/data/${widget.package}/files/il2cpp/Metadata")
+                      );
+                    });
+                  }
+                  /*
+                  final time = DateTime.now().millisecondsSinceEpoch / 1000;
+                  print("begin");
+                  while (DateTime.now().millisecondsSinceEpoch / 1000 - time <= 30) {
+                    write(file, "krr-prd.star-api.com", data.getString("api") ?? "krr-prd.star-api.com", int.parse("4A403",radix: 16));
+                    write(file, "asset-krr-prd.star-api.com/{0}", data.getString("asset") ?? "asset-krr-prd.star-api.com/{0}", int.parse("1D36E", radix: 16));
+                  }
+                  print("end");
+                  */
                 }
                 else if (status.isPermanentlyDenied) {
                   InstalledApps.toast("由于您永久拒绝授予文件访问权限，需要手动在在在应用设置允许文件访问", true);

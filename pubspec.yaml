@@ -32,11 +32,12 @@ dependencies:
     sdk: flutter
   shared_preferences:
   permission_handler:
-  flutter_inappwebview:
+  flutter_custom_tabs:
   device_info_plus:
   installed_apps:
   need_resume:
-  saf:
+  bringtoforeground: ^0.0.2
+  shared_storage: ^0.7.1
 
 
   # The following adds the Cupertino Icons font to your application.
