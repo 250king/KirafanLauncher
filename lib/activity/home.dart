@@ -102,14 +102,13 @@ class HomeActivityState extends ResumableState<HomeActivity> {
                 final device = DeviceInfoPlugin();
                 final os = await device.androidInfo;
                 late PermissionStatus status;
-                String dir = "";
                 if (os.version.sdkInt >= 30) {
                   status = await Permission.manageExternalStorage.request();
                 }
                 else {
                   status = await Permission.storage.request();
                 }
-                if (status.isGranted && dir.isNotEmpty) {
+                if (status.isGranted) {
                   InstalledApps.startApp(widget.package);
                   if (os.version.sdkInt >= 30) {
                     InstalledApps.toast("请等待5秒钟后继续授权，等待期间不要退出游戏", true);
