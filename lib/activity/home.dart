@@ -1,14 +1,14 @@
-import 'dart:async';
+// ignore_for_file: use_build_context_synchronously
+import 'dart:isolate';
 import 'dart:io';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:installed_apps/installed_apps.dart';
 import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
 import 'package:need_resume/need_resume.dart';
-import 'package:shared_storage/saf.dart';
 import 'package:kirafan_launcher/base/data.dart';
+import 'package:kirafan_launcher/base/file.dart';
 import 'package:kirafan_launcher/components/button.dart';
 import 'package:kirafan_launcher/activity/config.dart';
 
@@ -25,18 +25,6 @@ class HomeActivity extends StatefulWidget {
 
 class HomeActivityState extends ResumableState<HomeActivity> {
   String version = "";
-
-  void write(RandomAccessFile file, String origin, String replace, int position) async {
-    final length = origin.length;
-    file.setPosition(position);
-    final raw = await file.read(length);
-    if (raw != utf8.encode(replace)) {
-      if (raw == utf8.encode(origin)) {
-        file.setPosition(position);
-        file.writeFrom(utf8.encode(replace));
-      }
-    }
-  }
 
   void checkApp() {
     InstalledApps.getAppInfo(widget.package).then((result) {
@@ -67,32 +55,39 @@ class HomeActivityState extends ResumableState<HomeActivity> {
       appBar: AppBar(
         title: const Text("Kirafan Launcher"),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            Button(
-              text: "配置",
-              action: () async {
-                await Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return const ConfigActivity();
-                }));
+      body: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          Button(
+            text: "配置",
+            action: () async {
+              await Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return const ConfigActivity();
+              }));
+            }
+          ),
+          const SizedBox(height: 12),
+          Button(
+            text: version.isEmpty? "安装应用": "应用已安装（v$version）",
+            action: () {
+              if (version.isEmpty) {
+                const url = "https://kirafan-asset-cn-shenzhen.oss-cn-shenzhen.aliyuncs.com/apk/%E3%81%8D%E3%82%89%E3%82%89%E3%83%95%E3%82%A1%E3%83%B3%E3%82%BF%E3%82%B8%E3%82%A2_3.6.0_Apkpure.apk";
+                launch(url, customTabsOption: const CustomTabsOption(
+                  enableDefaultShare: false
+                ));
               }
-            ),
-            const SizedBox(height: 12),
-            Button(
-              text: version.isEmpty? "安装应用": "应用已安装（v$version）",
-              action: () async {
-                if (version.isEmpty) {
-                  const url = "https://kirafan-asset-cn-shenzhen.oss-cn-shenzhen.aliyuncs.com/apk/%E3%81%8D%E3%82%89%E3%82%89%E3%83%95%E3%82%A1%E3%83%B3%E3%82%BF%E3%82%B8%E3%82%A2_3.6.0_Apkpure.apk";
-                  await launch(url, customTabsOption: const CustomTabsOption(
-                    enableDefaultShare: false
-                  ));
-                }
-              }
-            ),
-            const SizedBox(height: 12),
-            Button(text: "启动", action: () async {
+            }
+          ),
+          const SizedBox(height: 12),
+          Button(text: "启动", action: () async {
+            final api = data.getString("api") ?? "";
+            final asset = data.getString("asset") ?? "";
+            if (api.isEmpty || asset.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text("您还没设置相关配置，请先设置相关配置后再尝试启动")
+              ));
+            }
+            else {
               if (version.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text("您还没安装应用，请先安装应用后再尝试启动")
@@ -101,34 +96,30 @@ class HomeActivityState extends ResumableState<HomeActivity> {
               else if (version == "3.6.0") {
                 final device = DeviceInfoPlugin();
                 final os = await device.androidInfo;
-                late PermissionStatus status;
+                final storageStatus = await Permission.storage.request();
+                late PermissionStatus manageStatus;
                 if (os.version.sdkInt >= 30) {
-                  status = await Permission.manageExternalStorage.request();
+                  manageStatus = await Permission.manageExternalStorage.request();
                 }
-                else {
-                  status = await Permission.storage.request();
-                }
-                if (status.isGranted) {
-                  InstalledApps.startApp(widget.package);
+                if ((os.version.sdkInt >= 30 && storageStatus.isGranted && manageStatus.isGranted) || storageStatus.isGranted) {
                   if (os.version.sdkInt >= 30) {
-                    InstalledApps.toast("请等待5秒钟后继续授权，等待期间不要退出游戏", true);
-                    Timer.periodic(const Duration(seconds: 5), (t) async {
-                      final saf = await openDocument(
-                        initialUri: Uri.file("/storage/emulated/0/android/data/${widget.package}/files/il2cpp/Metadata")
-                      );
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("暂不支持Android 11及以上版本，我们也尽快适配")
+                    ));
+                  }
+                  else {
+                    final receivePort = ReceivePort();
+                    Isolate.spawn(FIleHelper.modify, receivePort.sendPort);
+                    final sendPort = await receivePort.first;
+                    sendPort.send({
+                      "file": File("/sdcard/Android/data/${widget.package}/files/il2cpp/metadata/global-metadata.dat"),
+                      "api": api,
+                      "asset": asset
                     });
                   }
-                  /*
-                  final time = DateTime.now().millisecondsSinceEpoch / 1000;
-                  print("begin");
-                  while (DateTime.now().millisecondsSinceEpoch / 1000 - time <= 30) {
-                    write(file, "krr-prd.star-api.com", data.getString("api") ?? "krr-prd.star-api.com", int.parse("4A403",radix: 16));
-                    write(file, "asset-krr-prd.star-api.com/{0}", data.getString("asset") ?? "asset-krr-prd.star-api.com/{0}", int.parse("1D36E", radix: 16));
-                  }
-                  print("end");
-                  */
+                  InstalledApps.startApp(widget.package);
                 }
-                else if (status.isPermanentlyDenied) {
+                else if ((os.version.sdkInt >= 30 && manageStatus.isPermanentlyDenied) || storageStatus.isPermanentlyDenied) {
                   InstalledApps.toast("由于您永久拒绝授予文件访问权限，需要手动在在在应用设置允许文件访问", true);
                   openAppSettings();
                 }
@@ -143,9 +134,9 @@ class HomeActivityState extends ResumableState<HomeActivity> {
                   content: Text("很抱歉，目前仅支持版本3.6.0，请删除版本有误的应用后重新安装")
                 ));
               }
-            }),
-          ],
-        )
+            }
+          })
+        ]
       )
     );
   }

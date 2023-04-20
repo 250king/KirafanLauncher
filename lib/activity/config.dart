@@ -38,27 +38,24 @@ class ConfigActivityState extends State<ConfigActivity> {
           )
         ]
       ),
-      body: Padding(
+      body: ListView(
         padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            TextField(
-              controller: api,
-              decoration: const InputDecoration(
-                labelText: '服务器主机名'
-              )
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: asset,
-              decoration: const InputDecoration(
-                labelText: '资源主机名'
-              )
+        children: [
+          TextField(
+            controller: api,
+            decoration: const InputDecoration(
+              labelText: '服务器主机名'
             )
-          ],
-        )
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: asset,
+            decoration: const InputDecoration(
+              labelText: '资源主机名'
+            )
+          )
+        ]
       )
     );
   }
-
 }
