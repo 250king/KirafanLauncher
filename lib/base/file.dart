@@ -20,7 +20,7 @@ class FIleHelper {
       io.closeSync();
     }
     // ignore: empty_catches, empty_statements
-    catch (expection) {}
+    catch (e) {}
   }
 
   static void modify(SendPort sendPort) async {
@@ -29,7 +29,7 @@ class FIleHelper {
     await for (final message in receivePort) {
       final file = message["file"];
       final time = DateTime.now().millisecondsSinceEpoch / 1000;
-      while (DateTime.now().millisecondsSinceEpoch / 1000 - time <= 45) {
+      while (DateTime.now().millisecondsSinceEpoch / 1000 - time <= 60) {
         write(file, "krr-prd.star-api.com", message["api"], int.parse("4A403", radix: 16));
         write(file, "asset-krr-prd.star-api.com/{0}", message["asset"], int.parse("1D36E", radix: 16));
       }

@@ -2,10 +2,10 @@ buildscript {
     ext.kotlin_version = '1.7.10'
     repositories {
         maven {
-            url 'https://repo.huaweicloud.com/repository/maven/'
+            url 'https://maven.aliyun.com/repository/public/'
         }
         maven {
-            url 'https://maven.aliyun.com/nexus/content/repositories/google'
+            url 'https://maven.aliyun.com/repository/google/'
         }
     }
 
@@ -18,10 +18,10 @@ buildscript {
 allprojects {
     repositories {
         maven {
-            url 'https://repo.huaweicloud.com/repository/maven/'
+            url 'https://maven.aliyun.com/repository/public/'
         }
         maven {
-            url 'https://maven.aliyun.com/nexus/content/repositories/google'
+            url 'https://maven.aliyun.com/repository/google/'
         }
     }
 }

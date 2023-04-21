@@ -10,6 +10,7 @@ import 'package:need_resume/need_resume.dart';
 import 'package:kirafan_launcher/base/data.dart';
 import 'package:kirafan_launcher/base/file.dart';
 import 'package:kirafan_launcher/components/button.dart';
+import 'package:kirafan_launcher/components/dialog/background.dart';
 import 'package:kirafan_launcher/activity/config.dart';
 
 final data = Data.preferences;
@@ -71,7 +72,7 @@ class HomeActivityState extends ResumableState<HomeActivity> {
             text: version.isEmpty? "安装应用": "应用已安装（v$version）",
             action: () {
               if (version.isEmpty) {
-                const url = "https://kirafan-asset-cn-shenzhen.oss-cn-shenzhen.aliyuncs.com/apk/%E3%81%8D%E3%82%89%E3%82%89%E3%83%95%E3%82%A1%E3%83%B3%E3%82%BF%E3%82%B8%E3%82%A2_3.6.0_Apkpure.apk";
+                const url = "https://s1.250king.top/achieve/%E3%81%8D%E3%82%89%E3%82%89%E3%83%95%E3%82%A1%E3%83%B3%E3%82%BF%E3%82%B8%E3%82%A2_3.6.0_Apkpure.apk";
                 launch(url, customTabsOption: const CustomTabsOption(
                   enableDefaultShare: false
                 ));
@@ -108,16 +109,19 @@ class HomeActivityState extends ResumableState<HomeActivity> {
                     ));
                   }
                   else {
-                    final receivePort = ReceivePort();
-                    Isolate.spawn(FIleHelper.modify, receivePort.sendPort);
-                    final sendPort = await receivePort.first;
-                    sendPort.send({
-                      "file": File("/sdcard/Android/data/${widget.package}/files/il2cpp/metadata/global-metadata.dat"),
-                      "api": api,
-                      "asset": asset
-                    });
+                    final result = await BackgroundDialog.show(context) ?? false;
+                    if (result) {
+                      final receivePort = ReceivePort();
+                      Isolate.spawn(FIleHelper.modify, receivePort.sendPort);
+                      final sendPort = await receivePort.first;
+                      sendPort.send({
+                        "file": File("/sdcard/Android/data/${widget.package}/files/il2cpp/metadata/global-metadata.dat"),
+                        "api": api,
+                        "asset": asset
+                      });
+                      InstalledApps.startApp(widget.package);
+                    }
                   }
-                  InstalledApps.startApp(widget.package);
                 }
                 else if ((os.version.sdkInt >= 30 && manageStatus.isPermanentlyDenied) || storageStatus.isPermanentlyDenied) {
                   InstalledApps.toast("由于您永久拒绝授予文件访问权限，需要手动在在在应用设置允许文件访问", true);
