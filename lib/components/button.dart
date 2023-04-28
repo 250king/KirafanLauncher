@@ -1,9 +1,13 @@
 import "package:flutter/material.dart";
 
 class Button extends StatelessWidget {
-  const Button({super.key, required this.text, required this.action});
+  const Button({super.key, required this.text, this.subtext = "", required this.icon, required this.action});
 
   final String text;
+
+  final String subtext;
+
+  final IconData icon;
 
   final void Function() action;
 
@@ -17,7 +21,24 @@ class Button extends StatelessWidget {
         ),
         minimumSize: const Size.fromHeight(90)
       ),
-      child: Text(text)
+      child: subtext.isEmpty? ListTile(
+        leading: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon)
+          ],
+        ),
+        title: Text(text)
+      ): ListTile(
+        leading: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon)
+          ],
+        ),
+        title: Text(text),
+        subtitle: Text(subtext),
+      )
     );
   }
 }
