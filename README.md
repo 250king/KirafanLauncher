@@ -1,3 +1,5 @@
+> 因为个人精力有限，项目已经弃坑了，希望有人可以继续弄
+
 # kirafan_launcher
 
 A new Flutter project.
